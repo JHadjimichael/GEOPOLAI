@@ -1,0 +1,5 @@
+Most Population = (255, 255, 255), value of 1
+A lot = (51, 51, 51), value of 0.2
+Medium = (102, 102, 102), value of 0.4
+Lightly = (153, 153, 153), value of 0.6
+Almost nothing = (204, 204, 204), value of 0.8

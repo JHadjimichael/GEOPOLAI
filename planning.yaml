@@ -1,0 +1,31 @@
+national_paths:
+  - max_positive_attributes
+  - min_negative_attributes
+
+goals:
+  - win_war:
+    - priorities:
+      - destroy_enemy_allies
+      - destroy_enemy_armies
+      - destroy_enemy_economy
+      - peace_deal_while_ahead
+      - peace_deal_before_further_loss
+  - win_diplomacy:
+    - priorities:
+      - have no enemies
+  - make_opponents_lose_war:
+    - priorities:
+      - join_war_on_other_side
+      - support_other side
+  - make_opponents_lose_diplomacy:
+    - priorities:
+      - entangle_opponent_in_alliances
+      - something_else
+  - research_things:
+    - priorities:
+      - fund_research
+  - improve_economy:
+    - priorities:
+      - fund_research
+      - fix_trade
+      - fund_internal_developement
