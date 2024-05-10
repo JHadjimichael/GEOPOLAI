@@ -118,7 +118,7 @@ for i in range(num_countries-1):
 data_over_time = sim_bed.run(100)
 pp(data_over_time[0])
 
-#pp(data_over_time)
+# pp(data_over_time)
 countries = [country for entry in data_over_time[0] if entry != 'timestamp' for country in [entry]]
 
 
@@ -141,6 +141,7 @@ past_data = dict()
 for country in countries:
     past_data[country] =[]
 
+
 def update(frame):
     l = []
     for i, line in enumerate(lines):
@@ -150,6 +151,7 @@ def update(frame):
         line.set_ydata(past_data[countries[i]])
     plt.ylim(0, max(l))
     return lines
+
 
 # Create the animation
 ani = FuncAnimation(fig, update, frames=range(100), interval=update_interval)

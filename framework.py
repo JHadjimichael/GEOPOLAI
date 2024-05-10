@@ -6,6 +6,7 @@ import llm_departments
 import lanchester
 import networkx as nx
 
+
 class political_party:
     def __init__(self, priorities, popularity, name, country):
         self.priorities = priorities
@@ -40,6 +41,7 @@ class political_party:
         
         return largest_priority
 
+
 class department:
     def __init__(self, name, share_of_power, country):
             self.name = name
@@ -53,15 +55,18 @@ class department:
     def demand_action(self, action_demanded, args):
         action_demanded(args)
         return 1 
-    
+
+
 class war_department(department):
+
+    self.campaign_planned = False
     def choose_action(self, goal):
         if self.country.at_war:
-            self.plan_campaign()
-
-
-
-
+            target, money_balance, effectiveness = self.plan_campaign()
+            if target, money, balance == 0, 0, 0:
+                self.country.econ_Dep.buy("War Materials", 20)
+            else:
+                self.campaign_planned = True
         juiciness = self.country.Treasury
         option = None
         if goal == 'Economic Success':
@@ -76,27 +81,10 @@ class war_department(department):
             elif random.random() < 0.4:
                 self.raid(option)
         elif goal == 'Dominance':
-            options = []
-            for option_name in self.country.Diplomatic_Relationships.keys():
-                if self.country.Diplomatic_Relationships[option_name] == "War" and not self.country.framework.countries[option_name].died:
-                    options.append(option_name)
-            #print(options)
-            
-            if random.random() < (0.4 * self.country.war_knowledge) and self.country.Geographic_Resources["War Materials"] > 200 and options != []:
-                target = random.choice(options)
-                wm = self.country.Geographic_Resources["War Materials"] * 0.3
-                f = self.country.Geographic_Resources["Food"] * 0.1
-                warmoney = self.country.Treasury * 0.1
-                war_chest = max(min(wm, f, warmoney), 0)
-                attackers = war_chest
-                self.country.Geographic_Resources["War Materials"] = wm-war_chest
-                #self.country.Geographic_Resources["Food"] = f-war_chest
-                self.country.Treasury -= war_chest
-                self.attack(target, attackers)
-                self.country.attacked_this_tick = True
+            if self.campaign_planned == True:
+                self.attack(target, money_balance, effectiveness)
             else:
-               # print('grrr...')
-                pass
+                self.country.econ_Dep.buy("War Materials", -20)
         elif goal == 'Happiness':
             self.country.econ_Dep.buy("War Materials", 20)
         else:
@@ -106,6 +94,9 @@ class war_department(department):
     def plan_campaign(self):
         max_score = 0
         final_target = None
+        my_yumminess = self.country.Treasury / self.country.framework.average_treasury
+        my_spikiness = self.country.army_ratio * self.country.population / self.country.framework.average_pop
+        my_score = my_yumminess + my_spikiness
         for nation_name in self.country.Diplomatic_Relationships.keys():
             if self.country.Diplomatic_Relationships[nation_name] == "War":
                 target = self.country.framework.countries[nation_name]
@@ -117,10 +108,13 @@ class war_department(department):
                     max_score = score
                     final_target = nation_name
 
-        money_available = self.country.Treasury
+        if max_score*1.2 > my_score:
+            return 0, 0, 0
+
+        money_comparison = self.country.Treasury - self.country.framework.countries[final_target].Treasury
         combat_effectiveness = self.country.war_knowledge
 
-
+        return final_target, money_comparison, combat_effectiveness
 
     def raid(self, target):
         juice = self.country.framework.countries[target].Treasury
@@ -128,12 +122,9 @@ class war_department(department):
         self.country.Treasury += juice * 0.1
         self.country.raided_this_tick = True
 
-    def attack(self, target, attackers):
-        self.country.framework.countries[target].Treasury -= attackers * 5 * 100 * self.country.war_knowledge
-        self.country.framework.countries[target].Geographic_Resources["War Materials"] = self.country.framework.countries[target].Geographic_Resources["War Materials"] - attackers * 1.5 * 10 * self.country.war_knowledge
-        self.country.framework.countries[target].Geographic_Resources["Food"] = self.country.framework.countries[target].Geographic_Resources["Food"] - attackers * 1.5 * self.country.war_knowledge
-        self.country.framework.countries[target].population -= attackers * 1.5 * 50 * self.country.war_knowledge
-        #print(f'Attecked {target} with war chest of {attackers}')
+    def attack(self, target, money_balance, effectiveness):
+
+
     def defend(self, target, defenders):
         #print(f'Defended {target} with {defenders}')
         pass
@@ -355,7 +346,7 @@ class country:
         else:
             self.war_Dep = war_department(self, 0.4, self)
             self.peace_Dep = peace_department("Peace Department", 0.1, self)
-            self.econ_Dep = llm_departments.econonmics_department("Economics Department", 0.3, self)
+            self.econ_Dep = econonmics_department("Economics Department", 0.3, self)
             self.research_Dep = research_department("Research Department", 0.2, self)
         
         self.carrying_capacity = self.Geographic_Resources['Food']*500
@@ -670,7 +661,7 @@ class simulation_bed:
     def deathmatch(self):
         boo = False        
         i = 0
-        while not boo and i <= 250:
+        while not boo and i <= 2000:
             some = self.tick()
             some["timestamp"] = str(i)
             self.all_attributes_over_time.append(some)
@@ -687,6 +678,7 @@ class simulation_bed:
 
     def run(self, number_of_ticks):
         for i in range(number_of_ticks):
+            print(f"TICK {i}")
             some = self.tick()
             some["timestamp"] = str(i)
             self.all_attributes_over_time.append(some)

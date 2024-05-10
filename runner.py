@@ -7,7 +7,7 @@ from tkinter import Canvas
 import sys
 import random
 import json
-
+mind = 'base'
 initial_countries = [
     [
         "Mean",
@@ -23,7 +23,7 @@ initial_countries = [
         {"Dominance":0.5, "EconomicSuccess":0.5, "Happiness":0.5},
         10000,
         0.6,
-        'llm_president'
+        mind
     ],
     [
         "Athens",
@@ -116,7 +116,7 @@ for i in range(num_countries-1):
 #sim_bed.print_detailed_country_list()
 #print(os.listdir())
 #sim_bed.process_planning("planning.yaml")
-data_over_time = sim_bed.run(5)
+data_over_time = sim_bed.deathmatch()
 #sim_bed.print_graph()
 sim_bed.print_detailed_country_list()
 
