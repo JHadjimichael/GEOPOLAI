@@ -3,7 +3,7 @@ import random
 import pyrankvote as pyvote
 import llm_president_brain
 import llm_departments
-import lanchester
+from lanchester import lanchester_battle
 import networkx as nx
 
 
@@ -58,17 +58,17 @@ class department:
 
 
 class war_department(department):
-
-    self.campaign_planned = False
     def choose_action(self, goal):
+        campaign_planned = False
         if self.country.at_war:
             target, money_balance, effectiveness = self.plan_campaign()
-            if target, money, balance == 0, 0, 0:
+            if (target, money, balance) == (0, 0, 0):
                 self.country.econ_Dep.buy("War Materials", 20)
             else:
-                self.campaign_planned = True
+                campaign_planned = True
         juiciness = self.country.Treasury
         option = None
+
         if goal == 'Economic Success':
             for option_name in self.country.Diplomatic_Relationships.keys():
                 if self.country.Diplomatic_Relationships[option_name] == "War" and not self.country.framework.countries[option_name].died:
@@ -81,7 +81,7 @@ class war_department(department):
             elif random.random() < 0.4:
                 self.raid(option)
         elif goal == 'Dominance':
-            if self.campaign_planned == True:
+            if campaign_planned == True:
                 self.attack(target, money_balance, effectiveness)
             else:
                 self.country.econ_Dep.buy("War Materials", -20)
@@ -123,7 +123,28 @@ class war_department(department):
         self.country.raided_this_tick = True
 
     def attack(self, target, money_balance, effectiveness):
+        the_ENENEMY = self.country.framework.countries[target]
 
+        A = self.country.population * self.county.army_ratio
+        B = the_ENENEMY.army_ratio
+        alpha = self.country.war_knowledge
+        beta = the_ENEMY.war_knowledge
+
+        res = lanchester_battle.run_battle(A, alpha, B, beta)
+
+        if res[0] == "A":
+            self.country.won_battles += 1
+            self.population -= res[1]
+            the_ENEMY.population -= B
+            the_ENEMY.won_battles -= 1
+        if res[0] == "B":
+            self.country.won_battles -= 1
+            self.population -= A
+            the_ENEMY.population -= res[1]
+            the_ENEMY.won_battles += 1
+        if res[0] == "Tie":
+            self.population -= A
+            the_ENEMY.population -= B
 
     def defend(self, target, defenders):
         #print(f'Defended {target} with {defenders}')
@@ -333,6 +354,7 @@ class country:
         self.inflation = 0.02
         self.happiness = 1
         self.at_war = self.is_at_war()
+        self.won_battles = 0
 
         self.econ_picks = 0
         self.dom_picks = 0
@@ -629,7 +651,8 @@ class simulation_bed:
                                   "Economic Picks":0,
                                   "Dominance Picks":0,
                                   "Happiness Picks":0,
-                                  "Happiness": 0}
+                                  "Happiness": 0,
+                                  "Won Battes": 0}
                 continue
             
             
@@ -654,14 +677,15 @@ class simulation_bed:
                                   "Economic Picks":curr_country.econ_picks,
                                   "Dominance Picks":curr_country.dom_picks,
                                   "Happiness Picks":curr_country.happy_picks,
-                                  "Happiness":curr_country.happiness}
+                                  "Happiness":curr_country.happiness,
+                                  "Won Battes": curr_country.won_battles}
         
         return attributes
     
     def deathmatch(self):
         boo = False        
         i = 0
-        while not boo and i <= 2000:
+        while not boo and i <= 1000:
             some = self.tick()
             some["timestamp"] = str(i)
             self.all_attributes_over_time.append(some)

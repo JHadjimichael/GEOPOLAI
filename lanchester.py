@@ -2,7 +2,7 @@ class lanchester_battle:
     def __init__(self) -> None:
         pass
 
-    def run_battle(self, A, alpha, B, beta):
+    def run_battle(A, alpha, B, beta):
         A_Army = A
         B_Army = B
 
