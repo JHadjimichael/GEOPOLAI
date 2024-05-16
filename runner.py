@@ -7,7 +7,7 @@ from tkinter import Canvas
 import sys
 import random
 import json
-mind = 'base'
+mind = 'llm_president'
 initial_countries = [
     [
         "Mean",

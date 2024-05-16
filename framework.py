@@ -62,7 +62,7 @@ class war_department(department):
         campaign_planned = False
         if self.country.at_war:
             target, money_balance, effectiveness = self.plan_campaign()
-            if (target, money, balance) == (0, 0, 0):
+            if (target, money_balance, effectiveness) == (0, 0, 0):
                 self.country.econ_Dep.buy("War Materials", 20)
             else:
                 campaign_planned = True
@@ -81,27 +81,27 @@ class war_department(department):
             elif random.random() < 0.4:
                 self.raid(option)
         elif goal == 'Dominance':
-            if campaign_planned == True:
+            if campaign_planned:
                 self.attack(target, money_balance, effectiveness)
             else:
                 self.country.econ_Dep.buy("War Materials", -20)
         elif goal == 'Happiness':
             self.country.econ_Dep.buy("War Materials", 20)
         else:
-           # print('invalid goal')
+            # print('invalid goal')
             return 'invalid goal'
 
     def plan_campaign(self):
         max_score = 0
         final_target = None
         my_yumminess = self.country.Treasury / self.country.framework.average_treasury
-        my_spikiness = self.country.army_ratio * self.country.population / self.country.framework.average_pop
+        my_spikiness = self.country.army_ratio * self.country.population / self.country.framework.average_population
         my_score = my_yumminess + my_spikiness
         for nation_name in self.country.Diplomatic_Relationships.keys():
             if self.country.Diplomatic_Relationships[nation_name] == "War":
                 target = self.country.framework.countries[nation_name]
                 yumminess = target.Treasury / self.country.framework.average_treasury
-                spikiness = target.war_knowledge * target.army_ratio * target.population / self.country.framework.average_pop
+                spikiness = target.war_knowledge * target.army_ratio * target.population / self.country.framework.average_population
                 score = yumminess + spikiness
 
                 if score > max_score:
@@ -123,10 +123,12 @@ class war_department(department):
         self.country.raided_this_tick = True
 
     def attack(self, target, money_balance, effectiveness):
-        the_ENENEMY = self.country.framework.countries[target]
+        self.country.attacked_this_tick = True
 
-        A = self.country.population * self.county.army_ratio
-        B = the_ENENEMY.army_ratio
+        the_ENEMY = self.country.framework.countries[target]
+
+        A = self.country.population * self.country.army_ratio
+        B = the_ENEMY.army_ratio
         alpha = self.country.war_knowledge
         beta = the_ENEMY.war_knowledge
 
@@ -134,16 +136,16 @@ class war_department(department):
 
         if res[0] == "A":
             self.country.won_battles += 1
-            self.population -= res[1]
+            self.country.population -= res[1]
             the_ENEMY.population -= B
             the_ENEMY.won_battles -= 1
         if res[0] == "B":
             self.country.won_battles -= 1
-            self.population -= A
+            self.country.population -= A
             the_ENEMY.population -= res[1]
             the_ENEMY.won_battles += 1
         if res[0] == "Tie":
-            self.population -= A
+            self.country.population -= A
             the_ENEMY.population -= B
 
     def defend(self, target, defenders):
@@ -256,6 +258,7 @@ class peace_department(department):
         elif goal == 'Dominance':
             if random.randint(1,2) == 1:
                 if options == []:
+                    #print("Declared War")
                     option = random.choice(list(self.country.Diplomatic_Relationships.keys()))
                     self.country.framework.G.add_edge(option, self.country.Name, relationship="War")
                     self.declare_war(option)
@@ -264,6 +267,7 @@ class peace_department(department):
             else:
                 if options != []:
                     option = random.choice(options)
+                    self.country.framework.G.add_edge(option, self.country.Name, relationship="Peace")
                     offer = 'eternal love and affection'
                     self.request_relationship(option, offer)
         elif goal == 'Happiness':
@@ -391,7 +395,9 @@ class country:
     def is_at_war(self):
         for nation_name in self.Diplomatic_Relationships.keys():
             if self.Diplomatic_Relationships[nation_name] == "War":
-                self.at_war = True
+                return True
+                #print("We are at war!")
+        return False
 
     def run_election(self):
         
@@ -458,6 +464,7 @@ class country:
         if self.brain_type == "base":
             self.run_election()
             goal_for_term = self.ruling_party.choose_goal()
+            print(goal_for_term + "<----- NOT OFF")
         elif self.brain_type == "llm_president":
             party = "Balancers"
             views = "pragmatism and balanced policies.  You will try to choose objectives that haven't been picked as often"
@@ -469,7 +476,7 @@ class country:
             else:
                 population_level = "medium"
                 
-            aggresssion_level = str(self.Metric_Priority['Dominance'])
+            aggression_level = str(self.Metric_Priority['Dominance'])
 
             if self.balance_this_tick >= self.framework.average_income + 0.2 * self.framework.average_income:
                 income_level = "high"
@@ -498,9 +505,11 @@ class country:
             num_hap = self.happy_picks
             num_econ = self.econ_picks
 
-            llm_goal_for_term = llm_president_brain.llm_president_brain.priority(party, views, population_level, aggresssion_level, income_level, food_level, wm_level, num_enemies, num_dom, num_hap, num_econ)
+            llm_brain = llm_president_brain.llm_president_brain()
 
-            #print(llm_goal_for_term)
+            llm_goal_for_term = llm_brain.priority(party, views, population_level, aggression_level, income_level, food_level, wm_level, num_enemies, num_dom, num_hap, num_econ)
+
+            print(llm_goal_for_term + "<----- OOF")
 
             if "Happiness" in llm_goal_for_term:
                 goal_for_term = "Happiness"
@@ -654,8 +663,6 @@ class simulation_bed:
                                   "Happiness": 0,
                                   "Won Battes": 0}
                 continue
-            
-            
 
             self.countries[c].tick()
             curr_country = self.countries[c]
@@ -685,7 +692,7 @@ class simulation_bed:
     def deathmatch(self):
         boo = False        
         i = 0
-        while not boo and i <= 1000:
+        while not boo and i <= 200:
             some = self.tick()
             some["timestamp"] = str(i)
             self.all_attributes_over_time.append(some)
@@ -698,7 +705,6 @@ class simulation_bed:
             i += 1
 
         return self.all_attributes_over_time
-
 
     def run(self, number_of_ticks):
         for i in range(number_of_ticks):

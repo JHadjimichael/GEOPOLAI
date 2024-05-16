@@ -1,10 +1,9 @@
 import requests
-from meta_ai_api import MetaAI
 class llm_econ_department_brain():
     def __init__(self):
         pass
 
-    def priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3):
+    def priority(self, balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3):
         department_description = f"You are the department head of the economic department of our great nation. You act as an extention of our far-sighted president. The president has much more information about the state of the world and the country.  The president is trust\n"
         give_choices = f"You will be picking an action for your department to take.  Your *only* choices, as mandated by the president, are between option 1: {choice_1}, option 2: {choice_2}, or option 3: {choice_3}.\n"
         current_state_intro = f"The state of our nation as compared to our neighbors is as follows:\n"
@@ -20,6 +19,7 @@ class llm_econ_department_brain():
         print(message)
         res = MetaAI().prompt(message=message)
         print(res)
+
         return res['message'].split('\n')[0] 
 
 class llm_department_brain():
