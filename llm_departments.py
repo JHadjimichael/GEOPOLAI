@@ -88,7 +88,16 @@ class econonmics_department(llm_department):
 
         if goal == "Economic Success":
             choice_1, choice_2, choice_3 = "gently raise taxes", "increase anti-corruption", "cool inflation"
-            choice = int(llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3))
+            choice = llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3)
+            if "1" in choice:
+                choice = 1
+            elif "2" in choice:
+                choice = 2
+            elif "3" in choice:
+                choice = 3
+
+            print(choice)
+
             if choice == 1:
                 self.tax_percentage += 0.01
                 self.country.Debt -= self.country.Treasury * 0.05
@@ -103,7 +112,16 @@ class econonmics_department(llm_department):
 
         elif goal == "Dominance":
             choice_1, choice_2, choice_3 = "increase the taxable population", "buy war materials", "buy food"
-            choice = int(llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3))
+            choice = llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3)
+            if "1" in choice:
+                choice = 1
+            elif "2" in choice:
+                choice = 2
+            elif "3" in choice:
+                choice = 3
+
+            print(choice)
+
             if choice == 1:
                 self.country.percentage_poor += 0.01
                 self.country.happiness -= 0.01
@@ -114,7 +132,15 @@ class econonmics_department(llm_department):
         
         elif goal == "Happiness":
             choice_1, choice_2, choice_3 = "harshly cut taxes", "decrease anti-corruption measures", "let inflation increase"
-            choice = int(llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3))
+            choice = llm_department_brain.llm_econ_department_brain.priority(balance, population_level, income_level, food_level, wm_level, num_enemies, choice_1, choice_2, choice_3)
+            if "1" in choice:
+                choice = 1
+            elif "2" in choice:
+                choice = 2
+            elif "3" in choice:
+                choice = 3
+            print(choice)
+
             if choice == 1:
                 self.tax_percentage -= 0.01
                 self.country.happiness += 0.01

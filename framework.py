@@ -372,7 +372,7 @@ class country:
         else:
             self.war_Dep = war_department(self, 0.4, self)
             self.peace_Dep = peace_department("Peace Department", 0.1, self)
-            self.econ_Dep = econonmics_department("Economics Department", 0.3, self)
+            self.econ_Dep = llm_departments.econonmics_department("Economics Department", 0.3, self)
             self.research_Dep = research_department("Research Department", 0.2, self)
         
         self.carrying_capacity = self.Geographic_Resources['Food']*500
@@ -464,7 +464,7 @@ class country:
         if self.brain_type == "base":
             self.run_election()
             goal_for_term = self.ruling_party.choose_goal()
-            print(goal_for_term + "<----- NOT OFF")
+            #print(goal_for_term + "<----- NOT OFF")
         elif self.brain_type == "llm_president":
             party = "Balancers"
             views = "pragmatism and balanced policies.  You will try to choose objectives that haven't been picked as often"
@@ -509,7 +509,7 @@ class country:
 
             llm_goal_for_term = llm_brain.priority(party, views, population_level, aggression_level, income_level, food_level, wm_level, num_enemies, num_dom, num_hap, num_econ)
 
-            print(llm_goal_for_term + "<----- OOF")
+            #print(llm_goal_for_term + "<----- OOF")
 
             if "Happiness" in llm_goal_for_term:
                 goal_for_term = "Happiness"
@@ -692,7 +692,8 @@ class simulation_bed:
     def deathmatch(self):
         boo = False        
         i = 0
-        while not boo and i <= 200:
+        while not boo and i <= 100:
+            print(f"TIME {i}")
             some = self.tick()
             some["timestamp"] = str(i)
             self.all_attributes_over_time.append(some)
