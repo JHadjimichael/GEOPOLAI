@@ -1,5 +1,6 @@
 import random
 import llm_department_brain
+from lanchester import lanchester_battle
 
 class llm_department:
     def __init__(self, name, share_of_power, country):
@@ -17,8 +18,16 @@ class llm_department:
     
 class war_department(llm_department):
     def choose_action(self, goal):
+        campaign_planned = False
+        if self.country.at_war:
+            target, money_balance, effectiveness = self.plan_campaign()
+            if (target, money_balance, effectiveness) == (0, 0, 0):
+                self.country.econ_Dep.buy("War Materials", 20)
+            else:
+                campaign_planned = True
         juiciness = self.country.Treasury
         option = None
+
         if goal == 'Economic Success':
             for option_name in self.country.Diplomatic_Relationships.keys():
                 if self.country.Diplomatic_Relationships[option_name] == "War" and not self.country.framework.countries[option_name].died:
@@ -31,32 +40,40 @@ class war_department(llm_department):
             elif random.random() < 0.4:
                 self.raid(option)
         elif goal == 'Dominance':
-            options = []
-            for option_name in self.country.Diplomatic_Relationships.keys():
-                if self.country.Diplomatic_Relationships[option_name] == "War" and not self.country.framework.countries[option_name].died:
-                    options.append(option_name)
-            #print(options)
-            
-            if random.random() < (0.3 * self.country.war_knowledge) and self.country.Geographic_Resources["War Materials"] > 200 and options != []:
-                target = random.choice(options)
-                wm = self.country.Geographic_Resources["War Materials"] * 0.3
-                f = self.country.Geographic_Resources["Food"] * 0.1
-                warmoney = self.country.Treasury * 0.1
-                war_chest = max(min(wm, f, warmoney), 0)
-                attackers = war_chest
-                self.country.Geographic_Resources["War Materials"] = wm-war_chest
-                #self.country.Geographic_Resources["Food"] = f-war_chest
-                self.country.Treasury -= war_chest
-                self.attack(target, attackers)
-                self.country.attacked_this_tick = True
+            if campaign_planned:
+                self.attack(target, money_balance, effectiveness)
             else:
-               # print('grrr...')
-                pass
+                self.country.econ_Dep.buy("War Materials", -20)
         elif goal == 'Happiness':
             self.country.econ_Dep.buy("War Materials", 20)
         else:
-           # print('invalid goal')
+            # print('invalid goal')
             return 'invalid goal'
+
+    def plan_campaign(self):
+        max_score = 0
+        final_target = None
+        my_yumminess = self.country.Treasury / self.country.framework.average_treasury
+        my_spikiness = self.country.army_ratio * self.country.population / self.country.framework.average_population
+        my_score = my_yumminess + my_spikiness
+        for nation_name in self.country.Diplomatic_Relationships.keys():
+            if self.country.Diplomatic_Relationships[nation_name] == "War":
+                target = self.country.framework.countries[nation_name]
+                yumminess = target.Treasury / self.country.framework.average_treasury
+                spikiness = target.war_knowledge * target.army_ratio * target.population / self.country.framework.average_population
+                score = yumminess + spikiness
+
+                if score > max_score:
+                    max_score = score
+                    final_target = nation_name
+
+        if max_score*1.2 > my_score:
+            return 0, 0, 0
+
+        money_comparison = self.country.Treasury - self.country.framework.countries[final_target].Treasury
+        combat_effectiveness = self.country.war_knowledge
+
+        return final_target, money_comparison, combat_effectiveness
 
     def raid(self, target):
         juice = self.country.framework.countries[target].Treasury
@@ -64,18 +81,39 @@ class war_department(llm_department):
         self.country.Treasury += juice * 0.1
         self.country.raided_this_tick = True
 
-    def attack(self, target, attackers):
-        self.country.framework.countries[target].Treasury -= attackers * 5 * 1000 * self.country.war_knowledge
-        self.country.framework.countries[target].Geographic_Resources["War Materials"] = self.country.framework.countries[target].Geographic_Resources["War Materials"] - attackers * 1.5 * 10 * self.country.war_knowledge
-        self.country.framework.countries[target].Geographic_Resources["Food"] = self.country.framework.countries[target].Geographic_Resources["Food"] - attackers * 1.5
-        self.country.framework.countries[target].population -= attackers * 1.5 * 50 * self.country.war_knowledge
-        #print(f'Attecked {target} with war chest of {attackers}')
+    def attack(self, target, money_balance, effectiveness):
+        self.country.attacked_this_tick = True
+
+        the_ENEMY = self.country.framework.countries[target]
+
+        A = self.country.population * self.country.army_ratio
+        B = the_ENEMY.army_ratio
+        alpha = self.country.war_knowledge
+        beta = the_ENEMY.war_knowledge
+
+        res = lanchester_battle.run_battle(A, alpha, B, beta)
+
+        if res[0] == "A":
+            self.country.won_battles += 1
+            self.country.population -= res[1]
+            the_ENEMY.population -= B
+            the_ENEMY.won_battles -= 1
+        if res[0] == "B":
+            self.country.won_battles -= 1
+            self.country.population -= A
+            the_ENEMY.population -= res[1]
+            the_ENEMY.won_battles += 1
+        if res[0] == "Tie":
+            self.country.population -= A
+            the_ENEMY.population -= B
+
     def defend(self, target, defenders):
         #print(f'Defended {target} with {defenders}')
         pass
     def wait(self):
         #print(f'Waited')
         pass
+
 
 class econonmics_department(llm_department):
     def __init__(self, name, share_of_power, country):
